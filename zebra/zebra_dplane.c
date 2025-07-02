@@ -2306,6 +2306,12 @@ int dplane_ctx_get_ns_sock(const struct zebra_dplane_ctx *ctx)
 }
 
 /* Accessors for nexthop information */
+void dplane_ctx_set_nhe_id(struct zebra_dplane_ctx *ctx, uint32_t nheid)
+{
+	DPLANE_CTX_VALID(ctx);
+	ctx->u.rinfo.nhe.id = nheid;
+}
+
 uint32_t dplane_ctx_get_nhe_id(const struct zebra_dplane_ctx *ctx)
 {
 	DPLANE_CTX_VALID(ctx);

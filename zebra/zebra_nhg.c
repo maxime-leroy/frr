@@ -3227,7 +3227,7 @@ int nexthop_active_update(struct route_node *rn, struct route_entry *re,
 	 * if the id exists, and will also force the creation
 	 * of a new nhe reflecting the changes we may make in this local copy.
 	 */
-	curr_nhe->id = 0;
+	//curr_nhe->id = 0; XXX: TOFIX
 
 	/* Process nexthops */
 	curr_active = nexthop_list_active_update(rn, re, curr_nhe, false);

@@ -2842,6 +2842,7 @@ static void process_subq_early_route_add(struct zebra_early_route *ere)
 	 * TODO: This will need to change when we start getting IDs from upper
 	 * level protocols, as the refcnt might be wrong, since it checks
 	 * if old_id != new_id.
+	 * XXX: TOFIX to avoid refcnt incremented twice ?
 	 */
 	route_entry_update_nhe(re, nhe);
 	route_entry_update_original_nhe(re, nhe);
@@ -4566,7 +4567,7 @@ int rib_add_multipath(afi_t afi, safi_t safi, struct prefix *p,
 	} else if (re->nhe_id > 0)
 		nhe.id = re->nhe_id;
 
-	n = zebra_nhe_copy(&nhe, 0);
+	n = zebra_nhe_copy(&nhe, nhe.id);
 
 	if (re->type == ZEBRA_ROUTE_KERNEL) {
 		struct interface *ifp;

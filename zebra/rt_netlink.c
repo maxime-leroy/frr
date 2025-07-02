@@ -774,7 +774,7 @@ static int netlink_route_read_unicast_ctx(struct nlmsghdr *h, ns_id_t ns_id,
 	uint32_t mtu = 0;
 	uint8_t distance = 0;
 	route_tag_t tag = 0;
-	uint32_t nhg_id = 0;
+	uint32_t nhe_id = 0;
 	void *dest = NULL;
 	void *gate = NULL;
 	int gate_len;
@@ -888,13 +888,13 @@ static int netlink_route_read_unicast_ctx(struct nlmsghdr *h, ns_id_t ns_id,
 	}
 
 	if (tb[RTA_NH_ID])
-		nhg_id = *(uint32_t *)RTA_DATA(tb[RTA_NH_ID]);
+		nhe_id = *(uint32_t *)RTA_DATA(tb[RTA_NH_ID]);
 
 	if (tb[RTA_PRIORITY])
 		metric = *(int *)RTA_DATA(tb[RTA_PRIORITY]);
 
 #if defined(SUPPORT_REALMS)
-	if (tb[RTA_FLOW])
+S	if (tb[RTA_FLOW])
 		tag = *(uint32_t *)RTA_DATA(tb[RTA_FLOW]);
 #endif
 
@@ -1049,8 +1049,8 @@ static int netlink_route_read_unicast_ctx(struct nlmsghdr *h, ns_id_t ns_id,
 		dplane_ctx_set_route_gw(ctx, &addr);
 	}
 
-	if (nhg_id > 0)
-		dplane_ctx_set_nhg_id(ctx, nhg_id);
+	if (nhe_id > 0)
+		dplane_ctx_set_nhe_id(ctx, nhe_id);
 
 done:
 

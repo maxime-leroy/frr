@@ -616,6 +616,7 @@ const struct nexthop_group *
 dplane_ctx_get_old_backup_ng(const struct zebra_dplane_ctx *ctx);
 
 /* Accessors for nexthop information */
+void dplane_ctx_set_nhe_id(struct zebra_dplane_ctx *ctx, uint32_t nheid);
 uint32_t dplane_ctx_get_nhe_id(const struct zebra_dplane_ctx *ctx);
 uint32_t dplane_ctx_get_old_nhe_id(const struct zebra_dplane_ctx *ctx);
 afi_t dplane_ctx_get_nhe_afi(const struct zebra_dplane_ctx *ctx);
