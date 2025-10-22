@@ -156,18 +156,6 @@ static int if_zebra_new_hook(struct interface *ifp)
 
 	ifp->info = zebra_if;
 
-	/*
-	 * Some platforms are telling us that the interface is
-	 * up and ready to go.  When we check the speed we
-	 * sometimes get the wrong value.  Wait a couple
-	 * of seconds and ask again.  Hopefully it's all settled
-	 * down upon startup.
-	 */
-	zebra_if->speed_update_count = 0;
-	event_add_timer(zrouter.master, if_zebra_speed_update, ifp, 15,
-			&zebra_if->speed_update);
-	event_ignore_late_timer(zebra_if->speed_update);
-
 	return 0;
 }
 
@@ -1986,6 +1974,19 @@ static void zebra_if_dplane_ifp_handling(struct zebra_dplane_ctx *ctx)
 			if_update_state_mtu6(ifp, mtu);
 			if_update_state_metric(ifp, 0);
 			if_update_state_speed(ifp, kernel_get_speed(ifp, NULL));
+
+			/*
+			 * Some platforms are telling us that the interface is
+			 * up and ready to go.  When we check the speed we
+			 * sometimes get the wrong value.  Wait a couple
+			 * of seconds and ask again.  Hopefully it's all settled
+			 * down upon startup.
+			 */
+			zif->speed_update_count = 0;
+			event_add_timer(zrouter.master, if_zebra_speed_update, ifp, 15,
+					&zif->speed_update);
+			event_ignore_late_timer(zif->speed_update);
+
 			ifp->ptm_status = ZEBRA_PTM_STATUS_UNKNOWN;
 			ifp->txqlen = dplane_ctx_get_intf_txqlen(ctx);
 
