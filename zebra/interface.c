@@ -69,6 +69,9 @@ static void if_zebra_speed_update(struct event *event)
 
 static void zebra_if_schedule_speed_update(struct zebra_if *zif, int timeout)
 {
+	if (!CHECK_FLAG(zif->flags, ZIF_FLAG_SPEED_POLLING))
+		return;
+
 	event_add_timer(zrouter.master, if_zebra_speed_update, zif->ifp, timeout,
 			&zif->speed_update);
 	event_ignore_late_timer(zif->speed_update);
@@ -1021,7 +1024,8 @@ void if_up(struct interface *ifp, bool install_connected)
 		zebra_evpn_mh_uplink_oper_update(zif);
 
 	event_cancel(&zif->speed_update);
-	dplane_intf_speed_get(ifp);
+	if (CHECK_FLAG(zif->flags, ZIF_FLAG_SPEED_POLLING))
+		dplane_intf_speed_get(ifp);
 
 	if_addr_wakeup(ifp);
 
@@ -2046,6 +2050,7 @@ static void zebra_if_dplane_ifp_handling(struct zebra_dplane_ctx *ctx)
 			if_update_state_metric(ifp, 0);
 			if (!speed_set) {
 				speed = 0;
+				SET_FLAG(zif->flags, ZIF_FLAG_SPEED_POLLING);
 				/* Query initial speed if not provided by dplane */
 				dplane_intf_speed_get(ifp);
 
