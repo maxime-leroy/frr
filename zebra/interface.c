@@ -1501,8 +1501,7 @@ static void zebra_if_netconf_update_ctx(struct zebra_dplane_ctx *ctx,
 			(*linkdown_set ? "ON" : "OFF"));
 }
 
-static void interface_vrf_del(ifindex_t ifindex, const char *name,
-			      uint32_t tableid, ns_id_t ns_id)
+static void interface_vrf_del(ifindex_t ifindex, const char *name, uint32_t tableid)
 {
 	struct vrf *vrf;
 
@@ -2009,7 +2008,7 @@ static void zebra_if_dplane_ifp_handling(struct zebra_dplane_ctx *ctx)
 		if_delete_update(&ifp);
 
 		if (zif_type == ZEBRA_IF_VRF && !vrf_is_backend_netns())
-			interface_vrf_del(ifindex, name, tableid, ns_id);
+			interface_vrf_del(ifindex, name, tableid);
 	} else {
 		ifindex_t master_ifindex, bridge_ifindex, link_ifindex;
 		enum zebra_slave_iftype zif_slave_type;
