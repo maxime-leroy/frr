@@ -1506,21 +1506,17 @@ static void interface_vrf_del(ifindex_t ifindex, const char *name,
 {
 	struct vrf *vrf;
 
-	{
-		if (IS_ZEBRA_DEBUG_DPLANE)
-			zlog_debug("DPLANE_OP_INTF_DELETE for VRF %s(%u)", name,
-				   ifindex);
+	if (IS_ZEBRA_DEBUG_DPLANE)
+		zlog_debug("DPLANE_OP_INTF_DELETE for VRF %s(%u)", name, ifindex);
 
-		vrf = vrf_lookup_by_id((vrf_id_t)ifindex);
-		if (!vrf) {
-			flog_warn(EC_ZEBRA_VRF_NOT_FOUND,
-				  "%s(%u): vrf not found", name, ifindex);
-			return;
-		}
-
-		frrtrace(3, frr_zebra, if_vrf_del, ifindex, name, tableid);
-		vrf_delete(vrf);
+	vrf = vrf_lookup_by_id((vrf_id_t)ifindex);
+	if (!vrf) {
+		flog_warn(EC_ZEBRA_VRF_NOT_FOUND, "%s(%u): vrf not found", name, ifindex);
+		return;
 	}
+
+	frrtrace(3, frr_zebra, if_vrf_del, ifindex, name, tableid);
+	vrf_delete(vrf);
 }
 
 static void interface_vrf_update(ifindex_t ifindex, const char *name,
@@ -1529,67 +1525,59 @@ static void interface_vrf_update(ifindex_t ifindex, const char *name,
 	struct vrf *vrf;
 	struct zebra_vrf *zvrf = NULL;
 
-	{
-		if (IS_ZEBRA_DEBUG_DPLANE)
-			zlog_debug(
-				"DPLANE_OP_INTF_UPDATE for VRF %s(%u) table %u",
-				name, ifindex, tableid);
+	if (IS_ZEBRA_DEBUG_DPLANE)
+		zlog_debug("DPLANE_OP_INTF_UPDATE for VRF %s(%u) table %u", name, ifindex, tableid);
 
-		/*
-		 * For a given tableid, if there already exists a vrf and it
-		 * is different from the current vrf to be operated, then there
-		 * is a misconfiguration and zebra will exit.
-		 */
-		vrf_id_t exist_id = zebra_vrf_lookup_by_table(tableid, ns_id);
+	/*
+	 * For a given tableid, if there already exists a vrf and it
+	 * is different from the current vrf to be operated, then there
+	 * is a misconfiguration and zebra will exit.
+	 */
+	vrf_id_t exist_id = zebra_vrf_lookup_by_table(tableid, ns_id);
 
-		if (exist_id != VRF_DEFAULT || strmatch(name, VRF_DEFAULT_NAME)) {
-			vrf = vrf_lookup_by_id(exist_id);
+	if (exist_id != VRF_DEFAULT || strmatch(name, VRF_DEFAULT_NAME)) {
+		vrf = vrf_lookup_by_id(exist_id);
 
-			if (!vrf_lookup_by_id((vrf_id_t)ifindex) && !vrf) {
-				flog_err(EC_ZEBRA_VRF_NOT_FOUND,
-					 "VRF %s id %u does not exist", name,
-					 ifindex);
-				frr_exit_with_buffer_flush(-1);
-			}
-
-			if (vrf && strcmp(name, vrf->name)) {
-				flog_err(EC_ZEBRA_VRF_MISCONFIGURED,
-					 "VRF %s id %u table id overlaps existing vrf %s(%d), misconfiguration exiting",
-					 name, ifindex, vrf->name, vrf->vrf_id);
-				frr_exit_with_buffer_flush(-1);
-			}
-		}
-
-		frrtrace(3, frr_zebra, if_vrf_update, ifindex, name, tableid);
-		vrf = vrf_update((vrf_id_t)ifindex, name);
-		if (!vrf) {
-			flog_err(EC_LIB_INTERFACE, "VRF %s id %u not created",
-				 name, ifindex);
-			return;
-		}
-
-		/*
-		 * This is the only place that we get the actual kernel table_id
-		 * being used.  We need it to set the table_id of the routes
-		 * we are passing to the kernel.... And to throw some totally
-		 * awesome parties. that too.
-		 *
-		 * At this point we *must* have a zvrf because the vrf_create
-		 * callback creates one.  We *must* set the table id
-		 * before the vrf_enable because of( at the very least )
-		 * static routes being delayed for installation until
-		 * during the vrf_enable callbacks.
-		 */
-		zvrf = (struct zebra_vrf *)vrf->info;
-		zvrf->table_id = tableid;
-
-		/* Enable the created VRF. */
-		if (!vrf_enable(vrf)) {
-			flog_err(EC_LIB_INTERFACE,
-				 "Failed to enable VRF %s id %u", name,
+		if (!vrf_lookup_by_id((vrf_id_t)ifindex) && !vrf) {
+			flog_err(EC_ZEBRA_VRF_NOT_FOUND, "VRF %s id %u does not exist", name,
 				 ifindex);
-			return;
+			frr_exit_with_buffer_flush(-1);
 		}
+
+		if (vrf && strcmp(name, vrf->name)) {
+			flog_err(EC_ZEBRA_VRF_MISCONFIGURED,
+				 "VRF %s id %u table id overlaps existing vrf %s(%d), misconfiguration exiting",
+				 name, ifindex, vrf->name, vrf->vrf_id);
+			frr_exit_with_buffer_flush(-1);
+		}
+	}
+
+	frrtrace(3, frr_zebra, if_vrf_update, ifindex, name, tableid);
+	vrf = vrf_update((vrf_id_t)ifindex, name);
+	if (!vrf) {
+		flog_err(EC_LIB_INTERFACE, "VRF %s id %u not created", name, ifindex);
+		return;
+	}
+
+	/*
+	 * This is the only place that we get the actual kernel table_id
+	 * being used.  We need it to set the table_id of the routes
+	 * we are passing to the kernel.... And to throw some totally
+	 * awesome parties. that too.
+	 *
+	 * At this point we *must* have a zvrf because the vrf_create
+	 * callback creates one.  We *must* set the table id
+	 * before the vrf_enable because of( at the very least )
+	 * static routes being delayed for installation until
+	 * during the vrf_enable callbacks.
+	 */
+	zvrf = (struct zebra_vrf *)vrf->info;
+	zvrf->table_id = tableid;
+
+	/* Enable the created VRF. */
+	if (!vrf_enable(vrf)) {
+		flog_err(EC_LIB_INTERFACE, "Failed to enable VRF %s id %u", name, ifindex);
+		return;
 	}
 }
 
