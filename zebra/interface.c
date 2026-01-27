@@ -1501,7 +1501,7 @@ static void zebra_if_netconf_update_ctx(struct zebra_dplane_ctx *ctx,
 			(*linkdown_set ? "ON" : "OFF"));
 }
 
-static void interface_vrf_del(ifindex_t ifindex, const char *name, uint32_t tableid)
+static void interface_vrf_del(ifindex_t ifindex, const char *name)
 {
 	struct vrf *vrf;
 
@@ -1514,7 +1514,7 @@ static void interface_vrf_del(ifindex_t ifindex, const char *name, uint32_t tabl
 		return;
 	}
 
-	frrtrace(3, frr_zebra, if_vrf_del, ifindex, name, tableid);
+	frrtrace(3, frr_zebra, if_vrf_del, ifindex, name, vrf->data.l.table_id);
 	vrf_delete(vrf);
 }
 
@@ -1968,7 +1968,6 @@ static void zebra_if_dplane_ifp_handling(struct zebra_dplane_ctx *ctx)
 	ns_id_t ns_id = dplane_ctx_get_ns_id(ctx);
 	ifindex_t ifindex = dplane_ctx_get_ifindex(ctx);
 	ifindex_t bond_ifindex = dplane_ctx_get_ifp_bond_ifindex(ctx);
-	uint32_t tableid = dplane_ctx_get_ifp_table_id(ctx);
 	enum zebra_iftype zif_type = dplane_ctx_get_ifp_zif_type(ctx);
 	struct interface *ifp;
 	struct zebra_ns *zns;
@@ -2008,7 +2007,7 @@ static void zebra_if_dplane_ifp_handling(struct zebra_dplane_ctx *ctx)
 		if_delete_update(&ifp);
 
 		if (zif_type == ZEBRA_IF_VRF && !vrf_is_backend_netns())
-			interface_vrf_del(ifindex, name, tableid);
+			interface_vrf_del(ifindex, name);
 	} else {
 		ifindex_t master_ifindex, bridge_ifindex, link_ifindex;
 		enum zebra_slave_iftype zif_slave_type;
@@ -2026,8 +2025,11 @@ static void zebra_if_dplane_ifp_handling(struct zebra_dplane_ctx *ctx)
 		uint64_t change_flags;
 
 		/* If VRF, create or update the VRF structure itself. */
-		if (zif_type == ZEBRA_IF_VRF && !vrf_is_backend_netns())
+		if (zif_type == ZEBRA_IF_VRF && !vrf_is_backend_netns()) {
+			uint32_t tableid = dplane_ctx_get_ifp_table_id(ctx);
+
 			interface_vrf_update(ifindex, name, tableid, ns_id);
+		}
 
 		master_ifindex = dplane_ctx_get_ifp_master_ifindex(ctx);
 		zif_slave_type = dplane_ctx_get_ifp_zif_slave_type(ctx);
