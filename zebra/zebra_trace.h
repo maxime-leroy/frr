@@ -104,6 +104,32 @@ TRACEPOINT_LOGLEVEL(frr_zebra, if_vrf_change, TRACE_INFO)
 
 TRACEPOINT_EVENT(
 	frr_zebra,
+	if_vrf_del,
+	TP_ARGS(ifindex_t, ifindex, const char *, name, uint32_t, tableid, uint8_t,
+	TP_FIELDS(
+		ctf_integer(ifindex_t, ifindex, ifindex)
+		ctf_string(vrf_name, name)
+		ctf_integer(uint32_t, tableid, tableid)
+	)
+)
+
+TRACEPOINT_LOGLEVEL(frr_zebra, if_vrf_del, TRACE_INFO)
+
+TRACEPOINT_EVENT(
+	frr_zebra,
+	if_vrf_update,
+	TP_ARGS(ifindex_t, ifindex, const char *, name, uint32_t, tableid, uint8_t),
+	TP_FIELDS(
+		ctf_integer(ifindex_t, ifindex, ifindex)
+		ctf_string(vrf_name, name)
+		ctf_integer(uint32_t, tableid, tableid)
+	)
+)
+
+TRACEPOINT_LOGLEVEL(frr_zebra, if_vrf_update, TRACE_INFO)
+
+TRACEPOINT_EVENT(
+	frr_zebra,
 	if_dplane_result,
 	TP_ARGS(enum dplane_op_e, oper, enum zebra_dplane_result, dplane_result, ns_id_t,
 		ns_id, struct interface *, ifp),

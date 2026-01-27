@@ -1501,14 +1501,12 @@ static void zebra_if_netconf_update_ctx(struct zebra_dplane_ctx *ctx,
 			(*linkdown_set ? "ON" : "OFF"));
 }
 
-static void interface_vrf_change(enum dplane_op_e op, ifindex_t ifindex,
-				 const char *name, uint32_t tableid,
-				 ns_id_t ns_id)
+static void interface_vrf_del(ifindex_t ifindex, const char *name,
+			      uint32_t tableid, ns_id_t ns_id)
 {
 	struct vrf *vrf;
-	struct zebra_vrf *zvrf = NULL;
 
-	if (op == DPLANE_OP_INTF_DELETE) {
+	{
 		if (IS_ZEBRA_DEBUG_DPLANE)
 			zlog_debug("DPLANE_OP_INTF_DELETE for VRF %s(%u)", name,
 				   ifindex);
@@ -1520,9 +1518,18 @@ static void interface_vrf_change(enum dplane_op_e op, ifindex_t ifindex,
 			return;
 		}
 
-		frrtrace(4, frr_zebra, if_vrf_change, ifindex, name, tableid, 0);
+		frrtrace(3, frr_zebra, if_vrf_del, ifindex, name, tableid);
 		vrf_delete(vrf);
-	} else {
+	}
+}
+
+static void interface_vrf_update(ifindex_t ifindex, const char *name,
+				 uint32_t tableid, ns_id_t ns_id)
+{
+	struct vrf *vrf;
+	struct zebra_vrf *zvrf = NULL;
+
+	{
 		if (IS_ZEBRA_DEBUG_DPLANE)
 			zlog_debug(
 				"DPLANE_OP_INTF_UPDATE for VRF %s(%u) table %u",
@@ -1553,7 +1560,7 @@ static void interface_vrf_change(enum dplane_op_e op, ifindex_t ifindex,
 			}
 		}
 
-		frrtrace(4, frr_zebra, if_vrf_change, ifindex, name, tableid, 1);
+		frrtrace(3, frr_zebra, if_vrf_update, ifindex, name, tableid);
 		vrf = vrf_update((vrf_id_t)ifindex, name);
 		if (!vrf) {
 			flog_err(EC_LIB_INTERFACE, "VRF %s id %u not created",
@@ -2014,7 +2021,7 @@ static void zebra_if_dplane_ifp_handling(struct zebra_dplane_ctx *ctx)
 		if_delete_update(&ifp);
 
 		if (zif_type == ZEBRA_IF_VRF && !vrf_is_backend_netns())
-			interface_vrf_change(op, ifindex, name, tableid, ns_id);
+			interface_vrf_del(ifindex, name, tableid, ns_id);
 	} else {
 		ifindex_t master_ifindex, bridge_ifindex, link_ifindex;
 		enum zebra_slave_iftype zif_slave_type;
@@ -2033,7 +2040,7 @@ static void zebra_if_dplane_ifp_handling(struct zebra_dplane_ctx *ctx)
 
 		/* If VRF, create or update the VRF structure itself. */
 		if (zif_type == ZEBRA_IF_VRF && !vrf_is_backend_netns())
-			interface_vrf_change(op, ifindex, name, tableid, ns_id);
+			interface_vrf_update(ifindex, name, tableid, ns_id);
 
 		master_ifindex = dplane_ctx_get_ifp_master_ifindex(ctx);
 		zif_slave_type = dplane_ctx_get_ifp_zif_slave_type(ctx);
