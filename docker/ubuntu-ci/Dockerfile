@@ -1,5 +1,5 @@
 ARG UBUNTU_VERSION=22.04
-FROM ubuntu:$UBUNTU_VERSION
+FROM ubuntu:$UBUNTU_VERSION AS base
 
 # If passed, update the value
 ARG UBUNTU_VERSION
@@ -154,6 +154,7 @@ RUN cd && pwd && ls -al && \
     sudo make install
 RUN python3 -m pip install 'libyang<4'
 
+FROM base
 USER frr:frr
 
 # Re-declare ARG after USER to make it available

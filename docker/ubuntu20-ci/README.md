@@ -8,6 +8,23 @@ This builds an ubuntu 20.04 container for dev / test
 docker build -t frr-ubuntu20:latest --build-arg=UBUNTU_VERSION=20.04 -f docker/ubuntu-ci/Dockerfile .
 ```
 
+# Build base image only (for faster iterative development)
+
+Build the base image with all dependencies (cached, run once):
+
+```
+docker build --target base -t frr-base:latest --build-arg=UBUNTU_VERSION=20.04 -f docker/ubuntu-ci/Dockerfile .
+```
+
+Then compile from source with mounted directory (fresh compilation each time):
+
+```
+docker run --rm -v $(pwd):/home/frr/frr -w /home/frr/frr frr-base:latest \
+  bash -c "./bootstrap.sh && ./configure --prefix=/usr --sysconfdir=/etc \
+    --localstatedir=/var --sbindir=/usr/lib/frr --enable-dev-build \
+    --enable-user=frr --enable-group=frr && make -j\$(nproc)"
+```
+
 # Running Full Topotest
 
 ```
