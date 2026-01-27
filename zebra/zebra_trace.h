@@ -105,9 +105,9 @@ TRACEPOINT_LOGLEVEL(frr_zebra, if_vrf_change, TRACE_INFO)
 TRACEPOINT_EVENT(
 	frr_zebra,
 	if_vrf_del,
-	TP_ARGS(ifindex_t, ifindex, const char *, name, uint32_t, tableid, uint8_t,
+	TP_ARGS(vrf_id_t, vrf_id, const char *, name, uint32_t, tableid),
 	TP_FIELDS(
-		ctf_integer(ifindex_t, ifindex, ifindex)
+		ctf_integer(vrf_id_t, vrf_id, vrf_id)
 		ctf_string(vrf_name, name)
 		ctf_integer(uint32_t, tableid, tableid)
 	)
@@ -118,9 +118,9 @@ TRACEPOINT_LOGLEVEL(frr_zebra, if_vrf_del, TRACE_INFO)
 TRACEPOINT_EVENT(
 	frr_zebra,
 	if_vrf_update,
-	TP_ARGS(ifindex_t, ifindex, const char *, name, uint32_t, tableid, uint8_t),
+	TP_ARGS(vrf_id_t, vrf_id, const char *, name, uint32_t, tableid),
 	TP_FIELDS(
-		ctf_integer(ifindex_t, ifindex, ifindex)
+		ctf_integer(vrf_id_t, vrf_id, vrf_id)
 		ctf_string(vrf_name, name)
 		ctf_integer(uint32_t, tableid, tableid)
 	)
